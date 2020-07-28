@@ -86,6 +86,10 @@ class WindowsClient(QMainWindow, ):
             ''')
             sys.stdout.write = self._write
 
+    def _pause_write(self,info):
+        # 暂停就是什么都不做。
+        pass
+
     def _write(self, info):
         """
         这个是关键，普通print是如何自动显示在右边界面的黑框的。
