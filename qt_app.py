@@ -24,6 +24,19 @@ class WindowsClient(QMainWindow, ):
     def __init__(self, *args, **kwargs):
         QMainWindow.__init__(self, *args, **kwargs)
 
+        """
+               # 这个用组合的形式，来访问控件。
+
+               网上有的是用继承方式，让WindowsClient同时也继承Ui_MainWindow，那么这两行
+
+               self.ui = Ui_MainWindow()  
+               self.ui.setupUi(self)
+
+               就成了一行，变成 self.setupUi(self) 然后用self.pushButtonxx 来访问控件。
+               现在方式self.ui.pushButtonxx来访问控件，这种pycahrm自动补全范围更小，使用更清晰。
+
+        """
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
