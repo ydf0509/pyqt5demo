@@ -62,7 +62,7 @@ class WindowsClient(QMainWindow, ):
 
     def __init_std(self):
         sys.stdout.write = self._write
-        # sys.stderr.write = self._write
+        sys.stderr.write = self._write
         print('重定向了print到textEdit ,这个print应该显示在右边黑框。')
 
     def _stop_or_start_print(self):
@@ -140,7 +140,7 @@ class CustomWindowsClient(WindowsClient, LoggerMixinDefaultWithFileHandler):
     def set_button_click_event(self):
         self.ui.pushButton.clicked.connect(lambda: run_fun_in_new_thread(self.test_button_fun))
         self.ui.pushButton_5.clicked.connect(lambda: run_fun_in_new_thread(self.exec_python_code))  # 运行py代码
-        self.ui.pushButton_6.clicked.connect(lambda: run_fun_in_new_thread(self.exec_python_script))  # 运行py代码
+        self.ui.pushButton_6.clicked.connect(lambda: run_fun_in_new_thread(self.exec_python_script))  # 运行py脚本
 
         # 翻译
         self.ui.pushButton_7.clicked.connect(lambda: run_fun_in_new_thread(self.translate_words, args=('baidu',)))
@@ -163,6 +163,7 @@ print('脚本运行完成')
         self.ui.lineEdit.setText(r'F:\coding2\ydfhome\tests\test1.py')
         # self.ui.lineEdit.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py')
         self.ui.lineEdit_2.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome')
+        # self.ui.plainTextEdit_2.setPlainText("""燕子去了，有再来的时候；杨柳枯了，有再青的时候；桃花谢了，有再开的时候。但是，聪明的你告诉我，我们的日子为什么一去不复返呢？——是有人偷了他们罢：那是谁？又藏在何处呢？是他们自己逃走了罢：现在又到了哪里呢？""")
 
     def test_button_fun(self):
         for i in range(1, 10):
@@ -263,6 +264,24 @@ print('脚本运行完成')
 
         self.show()
 
+def my_excepthook(exc_type, exc_value, tb):
+    """
+    异常重定向到print，print重定向到控制台，一切信息逃不出控制台。
+    :param exc_type:
+    :param exc_value:
+    :param tb:
+    :return:
+    """
+    msg = ' Traceback (most recent call last):\n'
+    while tb:
+        filename = tb.tb_frame.f_code.co_filename
+        name = tb.tb_frame.f_code.co_name
+        lineno = tb.tb_lineno
+        msg += '   File "%.500s", line %d, in %.500s\n' % (filename, lineno, name)
+        tb = tb.tb_next
+
+    msg += ' %s: %s\n' %(exc_type.__name__, exc_value)
+    print(msg)
 
 if __name__ == '__main__':
     """
@@ -270,7 +289,11 @@ if __name__ == '__main__':
     pyinstaller -F -w -i logo1.ico qt_app.py
     """
     # F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py
+    from qdarkstyle import load_stylesheet_pyqt5
+
+    sys.excepthook = my_excepthook
     myapp = QApplication(sys.argv)
+    # myapp.setStyleSheet(load_stylesheet_pyqt5())
     client = CustomWindowsClient()
     client.run()
     sys.exit(myapp.exec_())
