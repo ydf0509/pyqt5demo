@@ -139,6 +139,7 @@ class CustomWindowsClient(WindowsClient, LoggerMixinDefaultWithFileHandler):
 
     def set_button_click_event(self):
         self.ui.pushButton.clicked.connect(lambda: run_fun_in_new_thread(self.test_button_fun))
+        # self.ui.pushButton.clicked.connect(self.test_button_fun)
         self.ui.pushButton_5.clicked.connect(lambda: run_fun_in_new_thread(self.exec_python_code))  # 运行py代码
         self.ui.pushButton_6.clicked.connect(lambda: run_fun_in_new_thread(self.exec_python_script))  # 运行py脚本
 
@@ -174,6 +175,7 @@ print('脚本运行完成')
             self.logger.critical(i)
             print(i)
             time.sleep(2)
+        1 / 0  # 故意错误
 
     def exec_python_code(self):
         code = self.ui.plainTextEdit.toPlainText()
@@ -264,6 +266,7 @@ print('脚本运行完成')
 
         self.show()
 
+
 def my_excepthook(exc_type, exc_value, tb):
     """
     异常重定向到print，print重定向到控制台，一切信息逃不出控制台。
@@ -280,8 +283,9 @@ def my_excepthook(exc_type, exc_value, tb):
         msg += '   File "%.500s", line %d, in %.500s\n' % (filename, lineno, name)
         tb = tb.tb_next
 
-    msg += ' %s: %s\n' %(exc_type.__name__, exc_value)
+    msg += ' %s: %s\n' % (exc_type.__name__, exc_value)
     print(msg)
+
 
 if __name__ == '__main__':
     """
