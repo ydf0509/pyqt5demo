@@ -43,6 +43,19 @@ CustomWindowsClient是继承自WindowsClient的，主要是实现了
 ## 带控制台的客户端基类的实现。
 
 ```python
+import re
+import subprocess
+import sys
+import time
+import threading
+from qtui import Ui_MainWindow
+from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit
+from nb_log import LoggerMixin, LoggerMixinDefaultWithFileHandler
+from nb_log.monkey_print import reverse_patch_print
+import nb_log
+from translate_util.translate_tool import translate_other2cn, translate_other2en
 
 class WindowsClient(QMainWindow, ):
     """
