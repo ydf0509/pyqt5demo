@@ -33,7 +33,7 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大萨达&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -355,7 +355,7 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgb
        <string/>
       </property>
       <property name="placeholderText">
-       <string>请输入需要翻译的语句，支持自动识别中英文</string>
+       <string/>
       </property>
      </widget>
      <widget class="QPushButton" name="pushButton_11">
