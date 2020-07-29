@@ -18,7 +18,7 @@ python代码中任意print 控制台日志，自动显示在右边控制台中�
 
 ## 翻译
 
-![Image text](http://www.kupan123.com/upload/1595908539x-1404755401.png)
+![Image text](https://i.niupic.com/images/2020/07/29/8sYi.png)
 
 
 ## 文件介绍
