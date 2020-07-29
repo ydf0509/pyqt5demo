@@ -16,6 +16,26 @@ reverse_patch_print()
 nb_log.nb_log_config_default.DEFAULUT_USE_COLOR_HANDLER = False
 
 
+def my_excepthook(exc_type, exc_value, tb):
+    """
+    异常重定向到print，print重定向到控制台，一切信息逃不出控制台。
+    :param exc_type:
+    :param exc_value:
+    :param tb:
+    :return:
+    """
+    msg = ' Traceback (most recent call last):\n'
+    while tb:
+        filename = tb.tb_frame.f_code.co_filename
+        name = tb.tb_frame.f_code.co_name
+        lineno = tb.tb_lineno
+        msg += '   File "%.500s", line %d, in %.500s\n' % (filename, lineno, name)
+        tb = tb.tb_next
+
+    msg += ' %s: %s\n' % (exc_type.__name__, exc_value)
+    print(msg)
+
+
 class WindowsClient(QMainWindow, ):
     """
     左界面右控制台的，通用客户端基类，重点是吃力了控制台，不带其他逻辑。
@@ -46,6 +66,8 @@ class WindowsClient(QMainWindow, ):
         self.ui.pushButton_3.clicked.connect(self._stop_or_start_print)
         self.ui.pushButton_4.clicked.connect(self._clear_text_edit)
 
+        sys.excepthook = my_excepthook  # 错误重定向到print，print重定向到qt界面的控制台，使永远不会发生出错导致闪退。
+
         self.__init_std()
         self.custom_init()
         self.set_button_click_event()
@@ -75,7 +97,7 @@ class WindowsClient(QMainWindow, ):
             font: 9pt "楷体";
             background-color: rgb(255, 8, 61);
                         ''')
-            sys.stdout.write = self._pause_write
+            sys.stdout.write = lambda info: None
         else:
             self._now_is_stop_print = False
             self.ui.pushButton_3.setText('控制台打印中')
@@ -85,10 +107,6 @@ class WindowsClient(QMainWindow, ):
             font: 9pt "楷体";
             ''')
             sys.stdout.write = self._write
-
-    def _pause_write(self,info):
-        # 暂停就是什么都不做。
-        pass
 
     def _write(self, info):
         """
@@ -256,7 +274,7 @@ print('脚本运行完成')
                 f'翻译耗时 {time.time() - t_start} 秒 ，结果：\n\n {result} \n\n  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
             self.ui.plainTextEdit_3.setPlainText(result or '')
 
-    def run(self):
+    def show(self):
         # ui.tab_5.hide()  不行
         # ui.tab_5.setVisible(False)  #不行
         # self.ui.tabWidget.tabBar().hide()  # 隐藏标签栏
@@ -268,27 +286,7 @@ print('脚本运行完成')
 
         self.setFixedSize(self.width(), self.height())  # 设置窗口不允许拉伸
 
-        self.show()
-
-
-def my_excepthook(exc_type, exc_value, tb):
-    """
-    异常重定向到print，print重定向到控制台，一切信息逃不出控制台。
-    :param exc_type:
-    :param exc_value:
-    :param tb:
-    :return:
-    """
-    msg = ' Traceback (most recent call last):\n'
-    while tb:
-        filename = tb.tb_frame.f_code.co_filename
-        name = tb.tb_frame.f_code.co_name
-        lineno = tb.tb_lineno
-        msg += '   File "%.500s", line %d, in %.500s\n' % (filename, lineno, name)
-        tb = tb.tb_next
-
-    msg += ' %s: %s\n' % (exc_type.__name__, exc_value)
-    print(msg)
+        super().show()
 
 
 if __name__ == '__main__':
@@ -299,9 +297,8 @@ if __name__ == '__main__':
     # F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py
     from qdarkstyle import load_stylesheet_pyqt5
 
-    sys.excepthook = my_excepthook
     myapp = QApplication(sys.argv)
     # myapp.setStyleSheet(load_stylesheet_pyqt5())
     client = CustomWindowsClient()
-    client.run()
+    client.show()
     sys.exit(myapp.exec_())
