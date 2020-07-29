@@ -320,10 +320,6 @@ print('脚本运行完成')
             self.ui.plainTextEdit_3.setPlainText(result or '')
 
     def show(self):
-        # ui.tab_5.hide()  不行
-        # ui.tab_5.setVisible(False)  #不行
-        # self.ui.tabWidget.tabBar().hide()  # 隐藏标签栏
-
         # 设置icon
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("logo1.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
