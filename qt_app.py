@@ -185,7 +185,7 @@ print('脚本运行完成')
         # QLineEdit.setText()
         self.ui.lineEdit.setText(r'F:\coding2\ydfhome\tests\test1.py')
         # self.ui.lineEdit.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py')
-        self.ui.lineEdit_2.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome')
+        self.ui.lineEdit_2.setText(r'F:\coding2\ydfhome')
         # self.ui.plainTextEdit_2.setPlainText("""燕子去了，有再来的时候；杨柳枯了，有再青的时候；桃花谢了，有再开的时候。但是，聪明的你告诉我，我们的日子为什么一去不复返呢？——是有人偷了他们罢：那是谁？又藏在何处呢？是他们自己逃走了罢：现在又到了哪里呢？""")
 
     def test_button_fun(self):
@@ -262,14 +262,10 @@ print('脚本运行完成')
             # print(f'使用 {translate_plat} 翻译 \n\n {to_be_translate_words} \n\n ')
             print(f'使用 {translate_plat} 翻译中 。。。。。 ')
             t_start = time.time()
-            try:
-                if to_be_translate_words_is_cn:
-                    result = translate_other2en(to_be_translate_words, platform=translate_plat)
-                else:
-                    result = translate_other2cn(to_be_translate_words, platform=translate_plat)
-            except Exception as e:
-                result = '翻译出错了'
-                print(e)
+            if to_be_translate_words_is_cn:
+                result = translate_other2en(to_be_translate_words, platform=translate_plat)
+            else:
+                result = translate_other2cn(to_be_translate_words, platform=translate_plat)
             print(
                 f'翻译耗时 {time.time() - t_start} 秒 ，结果：\n\n {result} \n\n  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
             self.ui.plainTextEdit_3.setPlainText(result or '')
@@ -291,8 +287,17 @@ print('脚本运行完成')
 
 if __name__ == '__main__':
     """
+    参数 含义
+    -F 指定打包后只生成一个exe格式的文件
+    -D 创建一个目录，包含exe文件，但会依赖很多文件（默认选项）
+    -c 使用控制台，无界面(默认)
+    -w 使用窗口，无控制台
+    -p 添加搜索路径，让其找到对应的库。
+    --icon 改变生成程序的icon图标(图片必须是icon格式的，可以在线转换)
+
     pyuic5 -o qtui.py qtui.ui
-    pyinstaller -F -w -i logo1.ico qt_app.py
+    --add-data "F:\coding2\ydfhome\pyqt项目\pyqt5demo\logo1.ico;logo1.ico"
+    pyinstaller -F -w -i logo1.ico -p F:\minicondadir\Miniconda2\envs\py36\Lib\site-packages --nowindowed  qt_app.py
     """
     # F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py
     from qdarkstyle import load_stylesheet_pyqt5

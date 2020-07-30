@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['qt_app.py'],
-             pathex=['F:\\coding2\\ydfhome\\pyqt项目\\pyqt5demo'],
+             pathex=['F:\\minicondadir\\Miniconda2\\envs\\py36\\Lib\\site-packages', 'F:\\coding2\\ydfhome\\pyqt项目\\pyqt5demo'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -29,4 +29,4 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='logo1.ico')
+          console=True , icon='logo1.ico')

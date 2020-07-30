@@ -51,7 +51,7 @@
       <property name="styleSheet">
        <string notr="true">
 color: rgb(255, 255, 255);
-background-color: rgb(0, 170, 255);</string>
+background-color: rgb(6, 18, 255);</string>
       </property>
       <property name="plainText">
        <string/>
@@ -67,7 +67,7 @@ background-color: rgb(0, 170, 255);</string>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(85, 255, 255);</string>
+       <string notr="true">background-color: rgb(216, 216, 216);</string>
       </property>
       <property name="text">
        <string>下面写python脚本</string>
@@ -101,7 +101,7 @@ font: 9pt &quot;楷体&quot;;</string>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(0, 255, 127);</string>
+       <string notr="true">background-color: rgb(183, 255, 253);</string>
       </property>
       <property name="text">
        <string/>
@@ -117,7 +117,7 @@ font: 9pt &quot;楷体&quot;;</string>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(85, 255, 255);</string>
+       <string notr="true">background-color: rgb(216, 216, 216);</string>
       </property>
       <property name="text">
        <string>python脚本全路径：</string>
@@ -133,7 +133,7 @@ font: 9pt &quot;楷体&quot;;</string>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(85, 255, 255);</string>
+       <string notr="true">background-color: rgb(216, 216, 216);</string>
       </property>
       <property name="text">
        <string>项目路径(PYTHONPATH)</string>
@@ -149,7 +149,7 @@ font: 9pt &quot;楷体&quot;;</string>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(0, 255, 127);</string>
+       <string notr="true">background-color: rgb(183, 255, 253);</string>
       </property>
       <property name="text">
        <string/>
@@ -165,7 +165,7 @@ font: 9pt &quot;楷体&quot;;</string>
        </rect>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(0, 85, 255);
+       <string notr="true">background-color: rgb(85, 170, 255);
 color: rgb(255, 255, 255);
 font: 9pt &quot;楷体&quot;;</string>
       </property>
@@ -407,7 +407,7 @@ color: rgb(255, 255, 255);</string>
             font: 9pt &quot;楷体&quot;;</string>
     </property>
     <property name="text">
-     <string>暂停控制台</string>
+     <string>控制台打印中</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_4">
