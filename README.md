@@ -2,12 +2,11 @@
 
 ```
 非常方便好用的左界面 + 右控制台形式。
-
 python代码中任意print 控制台日志，自动显示在右边控制台中，方便知道点击按钮背后实时发生了什么。
-
 因为做了sys.std 重定向，不需要大幅修改现有代码来实际操作控制台控件,就能达到代码中的任意print和控制台日志自动显示在控制台的效果。
-
 这个demo可以作为左界面右控制台布局的万能通用pyqt5客户端基类。
+
+实现了客户端重启后加载上一次的值。
 
 ```
 
@@ -48,10 +47,11 @@ import subprocess
 import sys
 import time
 import threading
+from configobj import ConfigObj
 from qtui import Ui_MainWindow
 from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal, QThread
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit, QTextEdit, QPlainTextEdit
 from nb_log import LoggerMixin, LoggerMixinDefaultWithFileHandler
 from nb_log.monkey_print import reverse_patch_print
 import nb_log
@@ -111,12 +111,16 @@ class WindowsClient(QMainWindow, ):
         self.ui.pushButton_3.clicked.connect(self._stop_or_start_print)
         self.ui.pushButton_4.clicked.connect(self._clear_text_edit)
 
+        self.config_ini = ConfigObj("qt_box_values.ini", encoding='UTF8')
+
         sys.excepthook = my_excepthook  # 错误重定向到print，print重定向到qt界面的控制台，使永远不会发生出错导致闪退。
 
         self.__init_std()
         self.custom_init()
         self.set_button_click_event()
         self.set_default_value()
+
+        self._init_all_input_box_value()
 
     def custom_init(self):
         pass
@@ -189,13 +193,66 @@ class WindowsClient(QMainWindow, ):
         self.ui.textEdit.setText(' ')
         self._len_textEdit = 0
 
+    def _save_all_input_box_value(self):
+        # 客户端退出前保存所有输入框的值到ini文件，使下次重启时候默认加载上一次的值。
+        for k, v in self.ui.__dict__.items():
+            if k == 'textEdit':  # textEdit这个使代表右边那个黑框控制台，把这个排除在外
+                continue
+            if isinstance(v, QLineEdit):
+                self.config_ini['qt_input_box_valus'][k] = v.text()
+            if isinstance(v, (QTextEdit, QPlainTextEdit)):
+                self.config_ini['qt_input_box_valus'][k] = v.toPlainText()
+            self.config_ini.write()
+
+    def _init_all_input_box_value(self):
+        """
+        初始化界面的值为上一次客户端关闭之前的值
+        :return:
+        """
+        for k, v in self.ui.__dict__.items():
+            try:
+                print(f'控件的名字 {k},  控件对象 {v}')
+                if isinstance(v, QLineEdit):
+                    v.setText(self.config_ini['qt_input_box_valus'][k])
+                if isinstance(v, (QTextEdit, QPlainTextEdit)):
+                    v.setPlainText(self.config_ini['qt_input_box_valus'][k])
+                print(f"成功设置 {k, self.config_ini['qt_input_box_valus'][k]}")
+            except KeyError as e:
+                print(e)
+
     def closeEvent(self, event):
+        self._save_all_input_box_value()
         reply = QtWidgets.QMessageBox.question(self, '警告', '\n你确认要退出吗？',
                                                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
         if reply == QtWidgets.QMessageBox.Yes:
             event.accept()
         else:
             event.ignore()
+
+
+class CustomQthread(QThread):
+    def __init__(self, parent=None, target=None, args=(), kwargs={}):
+        super(CustomQthread, self).__init__(parent)
+        self._target = target
+        self._args = args
+        self._kwargs = kwargs
+
+    def run(self):
+        """Method representing the thread's activity.
+
+        You may override this method in a subclass. The standard run() method
+        invokes the callable object passed to the object's constructor as the
+        target argument, if any, with sequential and keyword arguments taken
+        from the args and kwargs arguments, respectively.
+
+        """
+        try:
+            if self._target:
+                self._target(*self._args, **self._kwargs)
+        finally:
+            # Avoid a refcycle if the thread is running a function with
+            # an argument that has a member that points to the thread.
+            del self._target, self._args, self._kwargs
 
 
 def run_fun_in_new_thread(f, args=()):
@@ -230,7 +287,7 @@ print('脚本运行完成')
         # QLineEdit.setText()
         self.ui.lineEdit.setText(r'F:\coding2\ydfhome\tests\test1.py')
         # self.ui.lineEdit.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py')
-        self.ui.lineEdit_2.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome')
+        self.ui.lineEdit_2.setText(r'F:\coding2\ydfhome')
         # self.ui.plainTextEdit_2.setPlainText("""燕子去了，有再来的时候；杨柳枯了，有再青的时候；桃花谢了，有再开的时候。但是，聪明的你告诉我，我们的日子为什么一去不复返呢？——是有人偷了他们罢：那是谁？又藏在何处呢？是他们自己逃走了罢：现在又到了哪里呢？""")
 
     def test_button_fun(self):
@@ -307,19 +364,19 @@ print('脚本运行完成')
             # print(f'使用 {translate_plat} 翻译 \n\n {to_be_translate_words} \n\n ')
             print(f'使用 {translate_plat} 翻译中 。。。。。 ')
             t_start = time.time()
-            try:
-                if to_be_translate_words_is_cn:
-                    result = translate_other2en(to_be_translate_words, platform=translate_plat)
-                else:
-                    result = translate_other2cn(to_be_translate_words, platform=translate_plat)
-            except Exception as e:
-                result = '翻译出错了'
-                print(e)
+            if to_be_translate_words_is_cn:
+                result = translate_other2en(to_be_translate_words, platform=translate_plat)
+            else:
+                result = translate_other2cn(to_be_translate_words, platform=translate_plat)
             print(
                 f'翻译耗时 {time.time() - t_start} 秒 ，结果：\n\n {result} \n\n  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
             self.ui.plainTextEdit_3.setPlainText(result or '')
 
     def show(self):
+        # ui.tab_5.hide()  不行
+        # ui.tab_5.setVisible(False)  #不行
+        # self.ui.tabWidget.tabBar().hide()  # 隐藏标签栏
+
         # 设置icon
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("logo1.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -332,8 +389,17 @@ print('脚本运行完成')
 
 if __name__ == '__main__':
     """
+    参数 含义
+    -F 指定打包后只生成一个exe格式的文件
+    -D 创建一个目录，包含exe文件，但会依赖很多文件（默认选项）
+    -c 使用控制台，无界面(默认)
+    -w 使用窗口，无控制台
+    -p 添加搜索路径，让其找到对应的库。
+    --icon 改变生成程序的icon图标(图片必须是icon格式的，可以在线转换)
+
     pyuic5 -o qtui.py qtui.ui
-    pyinstaller -F -w -i logo1.ico qt_app.py
+    --add-data "F:\coding2\ydfhome\pyqt项目\pyqt5demo\logo1.ico;logo1.ico"
+    pyinstaller -F -w -i logo1.ico -p F:\minicondadir\Miniconda2\envs\py36\Lib\site-packages --nowindowed  qt_app.py
     """
     # F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py
     from qdarkstyle import load_stylesheet_pyqt5
@@ -343,6 +409,5 @@ if __name__ == '__main__':
     client = CustomWindowsClient()
     client.show()
     sys.exit(myapp.exec_())
-    
-    
+
 ```

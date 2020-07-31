@@ -3,10 +3,11 @@ import subprocess
 import sys
 import time
 import threading
+from configobj import ConfigObj
 from qtui import Ui_MainWindow
 from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal, QThread
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit, QTextEdit, QPlainTextEdit
 from nb_log import LoggerMixin, LoggerMixinDefaultWithFileHandler
 from nb_log.monkey_print import reverse_patch_print
 import nb_log
@@ -66,12 +67,16 @@ class WindowsClient(QMainWindow, ):
         self.ui.pushButton_3.clicked.connect(self._stop_or_start_print)
         self.ui.pushButton_4.clicked.connect(self._clear_text_edit)
 
+        self.config_ini = ConfigObj("qt_box_values.ini", encoding='UTF8')
+
         sys.excepthook = my_excepthook  # 错误重定向到print，print重定向到qt界面的控制台，使永远不会发生出错导致闪退。
 
         self.__init_std()
         self.custom_init()
         self.set_button_click_event()
         self.set_default_value()
+
+        self._init_all_input_box_value()
 
     def custom_init(self):
         pass
@@ -144,13 +149,66 @@ class WindowsClient(QMainWindow, ):
         self.ui.textEdit.setText(' ')
         self._len_textEdit = 0
 
+    def _save_all_input_box_value(self):
+        # 客户端退出前保存所有输入框的值到ini文件，使下次重启时候默认加载上一次的值。
+        for k, v in self.ui.__dict__.items():
+            if k == 'textEdit':  # textEdit这个使代表右边那个黑框控制台，把这个排除在外
+                continue
+            if isinstance(v, QLineEdit):
+                self.config_ini['qt_input_box_valus'][k] = v.text()
+            if isinstance(v, (QTextEdit, QPlainTextEdit)):
+                self.config_ini['qt_input_box_valus'][k] = v.toPlainText()
+            self.config_ini.write()
+
+    def _init_all_input_box_value(self):
+        """
+        初始化界面的值为上一次客户端关闭之前的值
+        :return:
+        """
+        for k, v in self.ui.__dict__.items():
+            try:
+                print(f'控件的名字 {k},  控件对象 {v}')
+                if isinstance(v, QLineEdit):
+                    v.setText(self.config_ini['qt_input_box_valus'][k])
+                if isinstance(v, (QTextEdit, QPlainTextEdit)):
+                    v.setPlainText(self.config_ini['qt_input_box_valus'][k])
+                print(f"成功设置 {k, self.config_ini['qt_input_box_valus'][k]}")
+            except KeyError as e:
+                print(e)
+
     def closeEvent(self, event):
+        self._save_all_input_box_value()
         reply = QtWidgets.QMessageBox.question(self, '警告', '\n你确认要退出吗？',
                                                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
         if reply == QtWidgets.QMessageBox.Yes:
             event.accept()
         else:
             event.ignore()
+
+
+class CustomQthread(QThread):
+    def __init__(self, parent=None, target=None, args=(), kwargs={}):
+        super(CustomQthread, self).__init__(parent)
+        self._target = target
+        self._args = args
+        self._kwargs = kwargs
+
+    def run(self):
+        """Method representing the thread's activity.
+
+        You may override this method in a subclass. The standard run() method
+        invokes the callable object passed to the object's constructor as the
+        target argument, if any, with sequential and keyword arguments taken
+        from the args and kwargs arguments, respectively.
+
+        """
+        try:
+            if self._target:
+                self._target(*self._args, **self._kwargs)
+        finally:
+            # Avoid a refcycle if the thread is running a function with
+            # an argument that has a member that points to the thread.
+            del self._target, self._args, self._kwargs
 
 
 def run_fun_in_new_thread(f, args=()):
