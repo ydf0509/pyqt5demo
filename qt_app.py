@@ -4,11 +4,13 @@ import sys
 import time
 import threading
 from configobj import ConfigObj
+
 from qtui import Ui_MainWindow
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal, QThread
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit, QTextEdit, QPlainTextEdit
-from nb_log import LoggerMixin, LoggerMixinDefaultWithFileHandler
+
+from nb_log import LoggerMixinDefaultWithFileHandler
 from nb_log.monkey_print import reverse_patch_print
 import nb_log
 from translate_util.translate_tool import translate_other2cn, translate_other2en
@@ -172,7 +174,7 @@ class WindowsClient(QMainWindow, ):
                     v.setText(self.config_ini['qt_input_box_valus'][k])
                 if isinstance(v, (QTextEdit, QPlainTextEdit)):
                     v.setPlainText(self.config_ini['qt_input_box_valus'][k])
-                print(f"成功设置 {k, self.config_ini['qt_input_box_valus'][k]}")
+                print(f"成功设置 【{k}】 -- 【{self.config_ini['qt_input_box_valus'][k]}】")
             except KeyError as e:
                 print(e)
 
@@ -238,8 +240,7 @@ import time
 for xxxx in range(10):
     time.sleep(1)
     print(xxxx)
-print('脚本运行完成')
-                                    """)
+print('脚本运行完成')""")
         # QLineEdit.setText()
         self.ui.lineEdit.setText(r'F:\coding2\ydfhome\tests\test1.py')
         # self.ui.lineEdit.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py')
@@ -301,7 +302,7 @@ print('脚本运行完成')
             if line_str:
                 print(line_str)
 
-    def translate_words(self, translate_platx):
+    def translate_words(self, translate_platx):  # 此函数是演示pyqt按钮传参的典范。
         to_be_translate_words = self.ui.plainTextEdit_2.toPlainText()
         to_be_translate_words_is_cn = False
         for ch in to_be_translate_words:
