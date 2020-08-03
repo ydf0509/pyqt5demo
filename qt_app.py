@@ -46,7 +46,7 @@ class WindowsClient(QMainWindow, LoggerMixinDefaultWithFileHandler):
 
     def __init__(self, *args, **kwargs):
         QMainWindow.__init__(self, *args, **kwargs)
-        # 除了控制台意外，在文件中也会记录日志。
+        # 除了控制台以外，在文件中也会记录日志。
         self.file_logger = nb_log.get_logger(f'{self.__class__.__name__}_file', is_add_stream_handler=False,
                                              log_filename=f'{self.__class__.__name__}_file.log', log_path='./')
 

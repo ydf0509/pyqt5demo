@@ -48,11 +48,13 @@ import sys
 import time
 import threading
 from configobj import ConfigObj
+
 from qtui import Ui_MainWindow
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal, QThread
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit, QTextEdit, QPlainTextEdit
-from nb_log import LoggerMixin, LoggerMixinDefaultWithFileHandler
+
+from nb_log import LoggerMixinDefaultWithFileHandler
 from nb_log.monkey_print import reverse_patch_print
 import nb_log
 from translate_util.translate_tool import translate_other2cn, translate_other2en
@@ -81,13 +83,16 @@ def my_excepthook(exc_type, exc_value, tb):
     print(msg)
 
 
-class WindowsClient(QMainWindow, ):
+class WindowsClient(QMainWindow, LoggerMixinDefaultWithFileHandler):
     """
     左界面右控制台的，通用客户端基类，重点是吃力了控制台，不带其他逻辑。
     """
 
     def __init__(self, *args, **kwargs):
         QMainWindow.__init__(self, *args, **kwargs)
+        # 除了控制台以外，在文件中也会记录日志。
+        self.file_logger = nb_log.get_logger(f'{self.__class__.__name__}_file', is_add_stream_handler=False,
+                                             log_filename=f'{self.__class__.__name__}_file.log', log_path='./')
 
         """
                # 这个用组合的形式，来访问控件。
@@ -141,12 +146,11 @@ class WindowsClient(QMainWindow, ):
             self._now_is_stop_print = True
             self.ui.pushButton_3.setText('暂停控制台打印')
             self.ui.pushButton_3.setStyleSheet('''
-            
             color: rgb(255, 255, 255);
             font: 9pt "楷体";
             background-color: rgb(255, 8, 61);
                         ''')
-            sys.stdout.write = lambda info: None
+            sys.stdout.write = lambda info: self.file_logger.debug(info)
         else:
             self._now_is_stop_print = False
             self.ui.pushButton_3.setText('控制台打印中')
@@ -177,6 +181,7 @@ class WindowsClient(QMainWindow, ):
         self.ui.textEdit.ensureCursorVisible()
         QtWidgets.qApp.processEvents(
             QtCore.QEventLoop.ExcludeUserInputEvents | QtCore.QEventLoop.ExcludeSocketNotifiers)
+        self.file_logger.debug(info)
 
     @staticmethod
     def _do_away_with_color(info: str):
@@ -216,7 +221,7 @@ class WindowsClient(QMainWindow, ):
                     v.setText(self.config_ini['qt_input_box_valus'][k])
                 if isinstance(v, (QTextEdit, QPlainTextEdit)):
                     v.setPlainText(self.config_ini['qt_input_box_valus'][k])
-                print(f"成功设置 {k, self.config_ini['qt_input_box_valus'][k]}")
+                print(f"成功设置 【{k}】 -- 【{self.config_ini['qt_input_box_valus'][k]}】")
             except KeyError as e:
                 print(e)
 
@@ -231,7 +236,7 @@ class WindowsClient(QMainWindow, ):
 
 
 class CustomQthread(QThread):
-    def __init__(self, parent=None, target=None, args=(), kwargs={}):
+    def __init__(self, parent=None, target=None, args=(), kwargs={}):  # noqa
         super(CustomQthread, self).__init__(parent)
         self._target = target
         self._args = args
@@ -259,7 +264,7 @@ def run_fun_in_new_thread(f, args=()):
     threading.Thread(target=f, args=args).start()
 
 
-class CustomWindowsClient(WindowsClient, LoggerMixinDefaultWithFileHandler):
+class CustomWindowsClient(WindowsClient, ):
 
     def set_button_click_event(self):
         self.ui.pushButton.clicked.connect(lambda: run_fun_in_new_thread(self.test_button_fun))
@@ -282,8 +287,7 @@ import time
 for xxxx in range(10):
     time.sleep(1)
     print(xxxx)
-print('脚本运行完成')
-                                    """)
+print('脚本运行完成')""")
         # QLineEdit.setText()
         self.ui.lineEdit.setText(r'F:\coding2\ydfhome\tests\test1.py')
         # self.ui.lineEdit.setText(r'F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py')
@@ -345,7 +349,7 @@ print('脚本运行完成')
             if line_str:
                 print(line_str)
 
-    def translate_words(self, translate_platx):
+    def translate_words(self, translate_platx):  # 此函数是演示pyqt按钮传参的典范。
         to_be_translate_words = self.ui.plainTextEdit_2.toPlainText()
         to_be_translate_words_is_cn = False
         for ch in to_be_translate_words:
@@ -402,7 +406,7 @@ if __name__ == '__main__':
     pyinstaller -F -w -i logo1.ico -p F:\minicondadir\Miniconda2\envs\py36\Lib\site-packages --nowindowed  qt_app.py
     """
     # F:\Users\ydf\Desktop\oschina\ydfhome\tests\test1.py
-    from qdarkstyle import load_stylesheet_pyqt5
+    # from qdarkstyle import load_stylesheet_pyqt5
 
     myapp = QApplication(sys.argv)
     # myapp.setStyleSheet(load_stylesheet_pyqt5())
