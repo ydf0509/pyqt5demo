@@ -1,3 +1,4 @@
+import json
 import re
 import subprocess
 import sys
@@ -5,11 +6,15 @@ import time
 import threading
 from configobj import ConfigObj
 
+import urllib.parse
+import base64
+
 from qtui import Ui_MainWindow
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtBoundSignal, QThread
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QLineEdit, QTextEdit, QPlainTextEdit
 
+import decorator_libs
 from nb_log import LoggerMixinDefaultWithFileHandler
 from nb_log.monkey_print import reverse_patch_print
 import nb_log
@@ -82,6 +87,7 @@ class WindowsClient(QMainWindow, LoggerMixinDefaultWithFileHandler):
         self.set_default_value()
 
         self._init_all_input_box_value()
+        decorator_libs.keep_circulating(60,block=False)(self._save_all_input_box_value)()
 
     def custom_init(self):
         pass
@@ -235,6 +241,18 @@ class CustomWindowsClient(WindowsClient, ):
         self.ui.pushButton_10.clicked.connect(lambda: run_fun_in_new_thread(self.translate_words, args=('iciba',)))
         self.ui.pushButton_11.clicked.connect(lambda: run_fun_in_new_thread(self.translate_words, args=('all',)))
 
+        # 浏览器复制数据的转化成json
+        self.ui.pushButton_12.clicked.connect(self.browser_copy_data_to_json)
+
+        # 站长工具
+        self.ui.pushButton_25.clicked.connect(self.javascript_format)
+        self.ui.pushButton_24.clicked.connect(self.url_encode)
+        self.ui.pushButton_23.clicked.connect(self.url_decode)
+        self.ui.pushButton_22.clicked.connect(self.base64_encode)
+        self.ui.pushButton_21.clicked.connect(self.base64_decode)
+        self.ui.pushButton_26.clicked.connect(self.format_json)
+
+
     def set_default_value(self):
         self.ui.plainTextEdit.setPlainText("""# 可以在这里面写代码。
 
@@ -331,6 +349,70 @@ print('脚本运行完成')""")
             print(
                 f'翻译耗时 {time.time() - t_start} 秒 ，结果：\n\n {result} \n\n  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
             self.ui.plainTextEdit_3.setPlainText(result or '')
+
+    def browser_copy_data_to_json(self):
+        data_dict = dict()
+        for line in self.ui.plainTextEdit_5.toPlainText().split('\n'):
+            line = re.sub(' ', '', line)
+            if line == '':
+                continue
+            k, v = line.split(':', maxsplit=1)
+            data_dict[k] = v
+        result = json.dumps(data_dict, indent=4,ensure_ascii=False)
+        print(f'转化成的json为：\n{result}')
+        self.ui.plainTextEdit_4.setPlainText(result)
+
+    def url_encode(self):
+        raw = self.ui.plainTextEdit_11.toPlainText()
+        print(f'原始为： {raw}')
+        result = urllib.parse.quote(raw)
+        self.ui.plainTextEdit_12.setPlainText(result)
+
+    def url_decode(self):
+        raw = self.ui.plainTextEdit_11.toPlainText()
+        print(f'原始为： {raw}')
+        result = urllib.parse.unquote(raw)
+        self.ui.plainTextEdit_12.setPlainText(result)
+
+    def base64_encode(self):
+        raw = self.ui.plainTextEdit_11.toPlainText()
+        print(f'原始为： {raw}')
+        result = base64.b64encode(raw.encode())
+        self.ui.plainTextEdit_12.setPlainText(result.decode())
+
+    def base64_decode(self):
+        raw = self.ui.plainTextEdit_11.toPlainText()
+        print(f'原始为： {raw}')
+        result = base64.b64decode(raw)
+        self.ui.plainTextEdit_12.setPlainText(result.decode())
+
+    def javascript_format(self):
+        raw = self.ui.plainTextEdit_11.toPlainText()
+        print(f'原始为： {raw}')
+        lines = raw.split(';')
+        indent = 0
+        formatted = []
+        for line in lines:
+            newline = []
+            for char in line:
+                newline.append(char)
+                if char == '{':  # { 是缩进的依据
+                    indent += 1
+                    newline.append("\n")
+                    newline.append("\t" * indent)
+                if char == "}":
+                    indent -= 1
+                    newline.append("\n")
+                    newline.append("\t" * indent)
+            formatted.append("\t" * indent + "".join(newline))
+        self.ui.plainTextEdit_12.setPlainText((";\n".join(formatted)))
+
+    def format_json(self):
+        raw = self.ui.plainTextEdit_11.toPlainText()
+        print(f'原始为:\n{raw}\n')
+        result = json.dumps(json.loads(raw),ensure_ascii=False,indent=4)
+        print(f'转化后为:\n{result}\n' )
+        self.ui.plainTextEdit_12.setPlainText(result)
 
     def show(self):
         # ui.tab_5.hide()  不行
