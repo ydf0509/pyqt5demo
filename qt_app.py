@@ -5,9 +5,13 @@ import sys
 import time
 import threading
 from configobj import ConfigObj
+# from concurrent.futures import ThreadPoolExecutor
+from threadpool_executor_shrink_able import CustomThreadpoolExecutor as ThreadPoolExecutor
 
 import urllib.parse
 import base64
+
+from requests import Session
 
 from qtui import Ui_MainWindow
 from PyQt5 import QtGui, QtWidgets, QtCore
@@ -48,6 +52,7 @@ class WindowsClient(QMainWindow, LoggerMixinDefaultWithFileHandler):
     """
     左界面右控制台的，通用客户端基类，重点是吃力了控制台，不带其他逻辑。
     """
+    _lock_for_write = threading.Lock()
 
     def __init__(self, *args, **kwargs):
         QMainWindow.__init__(self, *args, **kwargs)
@@ -132,18 +137,19 @@ class WindowsClient(QMainWindow, LoggerMixinDefaultWithFileHandler):
         # self.ui.textEdit.insertPlainText(info)
         # if len(self.ui.textEdit.toPlainText()) > 50000:
         #     self.textEdit.setPlainText('')
-        self._len_textEdit += len(info)
-        if self._len_textEdit > 50000:
-            self.ui.textEdit.setText(' ')
-            self._len_textEdit = 0
-        cursor = self.ui.textEdit.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
-        cursor.insertText(info)
-        self.ui.textEdit.setTextCursor(cursor)
-        self.ui.textEdit.ensureCursorVisible()
-        QtWidgets.qApp.processEvents(
-            QtCore.QEventLoop.ExcludeUserInputEvents | QtCore.QEventLoop.ExcludeSocketNotifiers)
-        self.file_logger.debug(info)
+        with self._lock_for_write:
+            self._len_textEdit += len(info)
+            if self._len_textEdit > 50000:
+                self.ui.textEdit.setText(' ')
+                self._len_textEdit = 0
+            cursor = self.ui.textEdit.textCursor()
+            cursor.movePosition(QtGui.QTextCursor.End)
+            cursor.insertText(info)
+            self.ui.textEdit.setTextCursor(cursor)
+            self.ui.textEdit.ensureCursorVisible()
+            QtWidgets.qApp.processEvents(
+                QtCore.QEventLoop.ExcludeUserInputEvents | QtCore.QEventLoop.ExcludeSocketNotifiers)
+            self.file_logger.debug(info)
 
     @staticmethod
     def _do_away_with_color(info: str):
@@ -227,6 +233,9 @@ def run_fun_in_new_thread(f, args=()):
 
 
 class CustomWindowsClient(WindowsClient, ):
+    def custom_init(self):
+        self._has_start_request = False
+        self._request_threadppool = None
 
     def set_button_click_event(self):
         self.ui.pushButton.clicked.connect(lambda: run_fun_in_new_thread(self.test_button_fun))
@@ -252,6 +261,9 @@ class CustomWindowsClient(WindowsClient, ):
         self.ui.pushButton_21.clicked.connect(self.base64_decode)
         self.ui.pushButton_26.clicked.connect(self.format_json)
 
+        # 请求
+        self.ui.pushButton_27.clicked.connect(lambda: run_fun_in_new_thread(self.start_request))
+        self.ui.pushButton_28.clicked.connect(self.stop_request)
 
     def set_default_value(self):
         self.ui.plainTextEdit.setPlainText("""# 可以在这里面写代码。
@@ -413,6 +425,43 @@ print('脚本运行完成')""")
         result = json.dumps(json.loads(raw),ensure_ascii=False,indent=4)
         print(f'转化后为:\n{result}\n' )
         self.ui.plainTextEdit_12.setPlainText(result)
+
+    def start_request(self):
+        self._has_start_request = True
+
+        self._headers = {}
+        if self.ui.radioButton.isChecked():
+            headers = {'content-type': 'application/json'}
+        headers2 = json.loads(self.ui.plainTextEdit_14.toPlainText()) if '{' in self.ui.plainTextEdit_14.toPlainText() else {}
+        self._headers.update(headers2)
+        self._data = json.loads(self.ui.plainTextEdit_13.toPlainText()) if '{' in self.ui.plainTextEdit_13.toPlainText() else {}
+        self._request_method = self.ui.comboBox.currentText()
+        self._url = self.ui.lineEdit_5.text()
+        self._concurrent = self.ui.spinBox.value()
+        self._run_times = self.ui.spinBox_2.value()
+
+        self._ss = Session()
+        self._request_threadppool = ThreadPoolExecutor(self._concurrent)
+        for i in range(self._run_times):
+            print(i)
+            self._request_threadppool.submit(self._request)
+        self._request_threadppool.shutdown()
+
+    def _request(self):
+        if self._has_start_request:
+            resp = self._ss.request(self._request_method,self._url,headers=self._headers,data=self._data)
+            if self._concurrent *  self._run_times > 1:
+                print(resp.text[:100] + '。。'*10 + '\n\n')
+                # with self._lock_for_write:
+                #     self.ui.plainTextEdit_15.setPlainText(resp.text[:100] + '。。'*10)
+            else:
+                print(resp.text[:100] + '。。'*10 + '\n\n' )
+                self.ui.plainTextEdit_15.setPlainText(resp.text)
+
+
+    def stop_request(self):
+        self._request_threadppool.shutdown(wait=False)
+        self._has_start_request = False
 
     def show(self):
         # ui.tab_5.hide()  不行
