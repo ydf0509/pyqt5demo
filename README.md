@@ -16,12 +16,12 @@ sys.std重定向很重要，就算当前在pyqt客户端类中可以直接操作
 
 ## 可以运行python脚本和python代码
 
-![Image text](https://i.niupic.com/images/2020/07/28/8sML.png)
+![Image text](https://github.com/ydf0509/pyqt5demo/blob/master/%E6%88%AA%E5%9B%BE/5%40D%5BE(PMF3W%24%4085_%7DAI(T94.png)
 
 
 ## 翻译
 
-![Image text](https://i.niupic.com/images/2020/07/29/8sYi.png)
+![Image text](https://github.com/ydf0509/pyqt5demo/blob/master/%E6%88%AA%E5%9B%BE/H8%7D3L%7D8I(Y1)7ER_%7D%24D)_%7BJ.png)
 
 
 ## 文件介绍
