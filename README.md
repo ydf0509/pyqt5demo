@@ -89,7 +89,7 @@ def my_excepthook(exc_type, exc_value, tb):
 
 class WindowsClient(QMainWindow, LoggerMixinDefaultWithFileHandler):
     """
-    左界面右控制台的，通用客户端基类，重点是吃力了控制台，不带其他逻辑。
+    左界面右控制台的，通用客户端基类，重点是除了自动使print重定向到控制台，不带其他逻辑。
     """
 
     def __init__(self, *args, **kwargs):
